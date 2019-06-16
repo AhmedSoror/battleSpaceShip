@@ -5,58 +5,24 @@ function init() {
   fireButton.onclick = handleFireButton;
   var guessInput = document.getElementById("guessInput");
   guessInput.onkeypress = handleKeyPress;
-  model.playerName=prompt("Please enter your name ");
-  var numShips;
-  var msg="Please enter number of ships";
-  while(true){
-    numShips= prompt(msg,"1-13");
-    if(!isNaN(numShips)&&numShips<14&&numShips>0)
-      break;
-    msg="Please enter a valid number of ships"  ;
-  }
-  // console.log(!isNaN(numShips));
-  model.numShips = numShips * 1;
-  model.ships = placeShips(numShips);
-  console.log(model.ships);
+  model.setPlayerName(prompt("Please enter your name "));
+  var numShips = inputNumShips();
+  model.setNumShips(numShips * 1);
+  model.placeShips();
   addCellHandlers();
 
+  console.log(model.ships);
 };
 
-function placeShips(numShips) {
-  var ships = [];
-  var locations = [];
-  var i = 0;
-  while (i < numShips) {
-    var vertical = Math.floor(Math.random() * 2);
-    var r0 = Math.floor(Math.random() * 7);
-    var c0 = Math.floor(Math.random() * 5);
-    var a0 = r0 + '' + c0;
-    var a1 = r0 + '' + (c0 + 1);
-    var a2 = r0 + '' + (c0 + 2);
-    if (vertical) {
-      var t = r0;
-      r0 = c0;
-      c0 = t;
-      a0 = r0 + '' + c0;
-      a1 = (r0 + 1) + '' + c0;
-      a2 = (r0 + 2) + '' + c0;
-    }
-    var index0 = locations.indexOf(a0);
-    var index1 = locations.indexOf(a1);
-    var index2 = locations.indexOf(a2);
-    if (index0 < 0 && index1 < 0 && index2 < 0) {
-      var ship = {
-        locations: [a0, a1, a2],
-        hits: ["", "", ""]
-      }
-      ships.push(ship);
-      locations.push(a0);
-      locations.push(a1);
-      locations.push(a2);
-      i++;
-    }
+function inputNumShips() {
+  var numShips;
+  var msg = "Please enter number of ships";
+  while (true) {
+    numShips = prompt(msg, "1-13");
+    if (!isNaN(numShips) && numShips < 14 && numShips > 0)
+      break;
+    msg = "Please enter a valid number of ships";
   }
-  return ships;
 }
 
 function handleFireButton() {
@@ -76,21 +42,21 @@ function handleKeyPress(e) {
   }
 };
 
-function addCellHandlers(){
-  for(var i=0;i<7;i++){
-    for(var j=0;j<7;j++){
-      var id=i+""+j;
-      var cell=document.getElementById(id);
+function addCellHandlers() {
+  for (var i = 0; i < 7; i++) {
+    for (var j = 0; j < 7; j++) {
+      var id = i + "" + j;
+      var cell = document.getElementById(id);
       // var guess=reversParse(id);
-      cell.setAttribute("onclick","handleCellClick("+id+")");
+      cell.setAttribute("onclick", "handleCellClick(" + id + ")");
     }
   }
 }
 
-function handleCellClick(id){
-  if(id<9)
-    id="0"+id;
-  var guess=reversParse(id);
+function handleCellClick(id) {
+  if (id < 9)
+    id = "0" + id;
+  var guess = reversParse(id);
   controller.processGuess(guess);
 }
 
@@ -115,7 +81,7 @@ function parseGuess(guess) {
 };
 
 function reversParse(locationIn) {
-  var location=""+locationIn;
+  var location = "" + locationIn;
   var letter = location[0];
   var character = String.fromCharCode(letter.charCodeAt(0) + 17);
   //console.log(character);
@@ -142,12 +108,21 @@ var view = {
 };
 
 var model = {
-  playerName:"",
+  playerName: "",
   boardSize: 7,
   numShips: 0,
   shipsSunk: 0,
   shipLength: 3,
   ships: [],
+  setPlayerName: function(name) {
+    this.playerName = name;
+  },
+  setNumShips: function(numShips) {
+    this.numShips = numShips;
+  },
+  setShipLength: function(shipLength) {
+    this.shipLength = shipLength;
+  },
   isSunk: function(ship) {
     for (var i = 0; i < this.shipLength; i++) {
       if (ship.hits[i] !== "hit")
@@ -178,6 +153,56 @@ var model = {
     view.displayMessage(reversParse(guess) + "   Miss");
     return false;
   },
+  placeShips: function() {
+    var ships = [];
+    var locations = [];
+    var shipsCreated = 0;
+    while (shipsCreated < this.numShips) {
+      var shipLocation = this.shipLocation();
+      var validLocation = this.isVaildLocation(shipLocation, locations);
+      if (validLocation) {
+        locations.concat(shipLocation);
+        var ship = {
+          locations: shipLocation,
+          hits: new Array(this.shipLength).fill("")
+        };
+        ships.push(ship);
+        shipsCreated++;
+      }
+    }
+    this.ships = ships;
+    // return ships;
+  },
+  shipLocation: function() {
+    var vertical = Math.floor(Math.random() * 2);
+    var r0 = Math.floor(Math.random() * 7);
+    var c0 = Math.floor(Math.random() * 5);
+    var a0 = r0 + '' + c0;
+    var shipLocation = [];
+    if (vertical) {
+      for (var i = 0; i < this.shipLength; i++) {
+        var a = (c0 + i) + '' + r0;
+        shipLocation.push(a);
+      }
+    } else {
+      for (var i = 0; i < this.shipLength; i++) {
+        var a = r0 + '' + (c0 + i);
+        shipLocation.push(a);
+      }
+    }
+    return shipLocation;
+  },
+  isVaildLocation: function(shipLocation, allLocations) {
+
+    for (var i = 0; i < this.shipLength; i++) {
+      var position = shipLocation[i];
+      var index = allLocations.indexOf(position);
+      if (index >= 0) {
+        return false;
+      }
+    }
+    return true;
+  }
 };
 
 var controller = {
@@ -189,10 +214,12 @@ var controller = {
       model.fire(location);
       if (this.winner()) {
         view.displayMessage("You sank all my battleships, in " + this.guesses + " guesses");
-              setTimeout(function(){ alert("holllaaaaaaaaa\n"+model.playerName+" has won "); }, 400);
+        setTimeout(function() {
+          alert("holllaaaaaaaaa\n" + model.playerName + " has won ");
+        }, 400);
       } else {
         if (this.gameOver())
-          alert("Game Over\n hardluck "+model.playerName);
+          alert("Game Over\n " + model.playerName+", Welcome to the loosers group");
       }
     }
   },
