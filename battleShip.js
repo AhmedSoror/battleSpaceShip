@@ -7,10 +7,9 @@ function init() {
   guessInput.onkeypress = handleKeyPress;
   model.setPlayerName(prompt("Please enter your name "));
   var numShips = inputNumShips();
-  model.setNumShips(numShips * 1);
+  model.setNumShips (numShips * 1);
   model.placeShips();
   addCellHandlers();
-
   console.log(model.ships);
 };
 
@@ -23,6 +22,7 @@ function inputNumShips() {
       break;
     msg = "Please enter a valid number of ships";
   }
+  return numShips;
 }
 
 function handleFireButton() {
@@ -151,6 +151,7 @@ var model = {
       }
     }
     view.displayMessage(reversParse(guess) + "   Miss");
+    view.displayMiss(guess);
     return false;
   },
   placeShips: function() {
