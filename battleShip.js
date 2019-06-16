@@ -162,7 +162,8 @@ var model = {
       var shipLocation = this.shipLocation();
       var validLocation = this.isVaildLocation(shipLocation, locations);
       if (validLocation) {
-        locations.concat(shipLocation);
+        locations=locations.concat(shipLocation);
+        console.log(locations);
         var ship = {
           locations: shipLocation,
           hits: new Array(this.shipLength).fill("")
